@@ -20,8 +20,7 @@ PyGrowCube
 
 
 
-Python modules for interacting with Elecrow GrowCube smart plant watering system
-
+Python module for interacting with Elecrow GrowCube smart plant watering system
 
 * Free software: MIT license
 * Documentation: https://pygrowcube.readthedocs.io.

@@ -1,9 +1,36 @@
 # Python dev notes
 
 Scratchpad of stuff while understanding this setup
+pygrowcube -l -d 192.168.239.139 
 
 ## CookieCutter docs
 https://github.com/audreyfeldroy/cookiecutter-pypackage/blob/master/docs/tutorial.rst
+
+## Packaging tutorial
+https://cookiecutter-pypackage.readthedocs.io/en/latest/tutorial.html
+
+[Releasing to PyPi checklist](https://github.com/audreyfeldroy/cookiecutter-pypackage/blob/master/docs/pypi_release_checklist.rst)
+
+[How to open source your first Python package](https://towardsdatascience.com/how-to-open-source-your-first-python-package-e717444e1da0)
+
+## Uploading to Test PyPi
+Created a .pypirc file in my $HOME with the API token for test.pypi.org.
+```
+[testpypi]
+  username = __token__
+  password = pypi-etc...
+```
+
+from my venv
+```bash
+# build
+python setup.py sdist bdist_wheel
+# upload
+twine upload --repository testpypi dist/*
+```
+
+End result: https://test.pypi.org/project/pygrowcube/0.1.0/
+
 
 ## invoking the CLI
 [Ref](https://github.com/audreyfeldroy/cookiecutter-pypackage/blob/master/docs/console_script_setup.rst)

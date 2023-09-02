@@ -64,7 +64,7 @@ class MessageClient:
                     self.read_until_delimiter(start,timeout_in_seconds) + self.read_until_delimiter(start, timeout_in_seconds)
                 )
                 if not type_and_length:
-                    return "NOCONTENT"
+                    return None
 
                 data = type_and_length
                 # Split the received data into message type and content length

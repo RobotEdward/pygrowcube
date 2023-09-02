@@ -5,7 +5,6 @@ from .messageclient import MessageClient
 from time import perf_counter
 import logging
 
-HOST = "192.168.239.139"
 PORT = 8800
 STATUS_TIMEOUT = 15 # wait max 15 seconds - sensors send a refresh every 10s when connected
 
