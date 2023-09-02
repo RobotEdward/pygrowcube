@@ -30,7 +30,7 @@ Python modules for interacting with Elecrow GrowCube smart plant watering system
 Features
 --------
 
-* TODO
+* Basic CLI and module to read current GrowCube version, temperature, humidity and status of each conencted moisture sensor
 
 Credits
 -------

@@ -1,5 +1,6 @@
 from datetime import datetime
 from enum import IntEnum
+import logging 
 
 
 class MessageType(IntEnum):
@@ -36,6 +37,13 @@ class Message:
             self.message_type = message_type
             self.message_content = message_content
             self.content_length = len(message_content)
+
+    @property
+    def readable_message_type(self) -> str:
+        if self.message_type in MessageType.__members__.values():
+            return f"{self.message_type} {MessageType(self.message_type).name}"
+        else:
+            return f"{self.message_type} UNKNOWN"
 
     def parse_growcube_datetime(datetime_str):
         """
