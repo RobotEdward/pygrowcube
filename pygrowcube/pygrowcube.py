@@ -24,9 +24,10 @@ class Status:
         self.refreshed_sensors = [False, False, False, False]
 
     def __str__(self) -> str:
-        s = f"GrowCube Version: {self.version}, Refresh Complete: {self.is_refresh_complete()}, Temperature: {self.temperature}, Humidity: {self.humidity}\n"
+        s = f"GrowCube version: {self.version}\nTemperature: {self.temperature}, Humidity: {self.humidity}\n"
         for i in range(4):
-            s += f" - Sensor {i} - Refreshed: {self.refreshed_sensors[i]}, Reading: {self.moistures[i]}, Disconnection Warning: {self.sensor_warnings[i]}\n"
+            s += f" - Sensor {i} - Moisture reading: {self.moistures[i]}, Disconnection warning: {self.sensor_warnings[i]}, Refreshed: {self.refreshed_sensors[i]}\n"
+        s += f"All readings refreshed: {self.is_refresh_complete()}, "
         return s
         
 
@@ -88,8 +89,8 @@ class Status:
         handler(self, message)
 
 
-def get_status():
-    client = MessageClient(HOST, PORT)
+def get_status(growcube_address:str) -> Status:
+    client = MessageClient(growcube_address,PORT)
     status = Status()
 
     try:
@@ -103,20 +104,11 @@ def get_status():
         i = 0
         while not status.is_refresh_complete():
             response = client.receive_message()
-            message = Message(message_string=response)
-            status.handle_message(message)
-            print(f"{i} {str(status)}")
+            if response:
+                message = Message(message_string=response)
+                status.handle_message(message)
+                # print(f"{i} {str(status)}")
             i += 1
-        # i = 0
-        # while i < 7:
-        #     response = client.receive_message()
-        #     if not response:
-        #         break
-        #     message = Message(message_string=response)
-
-        #     print(response)
-        #     messages.append(response)
-        #     i += 1
-        return str(status)
+        return status
     finally:
         client.close()
