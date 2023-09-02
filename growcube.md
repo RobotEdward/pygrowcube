@@ -28,6 +28,10 @@ elea22#83#0@2023@8@28@00,00,00,00,00,00,00,00,00,00,00,74,81,84,85,86,86,85,86,8
 
 The app also sends `ele506` and gets `ele550` as a response before sending some commands.
 
+# Connection
+If you connect, growcube sends a bunch of 0 bytes in between messages. I guess to keep the connection alive. 
+If you do nothing it repeatedly sends the 30, 21, 21, 21, 21 sequence every 10s.
+
 # Commands
 
 # 48 - Get moisture history
@@ -39,6 +43,13 @@ The app also sends `ele506` and gets `ele550` as a response before sending some 
 ## Current sensor values
 
 ### Request - none
+
+### Response 30 - Sensor disconnected
+`elea30#1#2`
+ - content = the channel that is not connected
+
+### Response 33 - ??
+ - Only ever seen 0@0
 
 ### Response 21 - Sensor current status
 
@@ -91,6 +102,10 @@ The app also sends `ele506` and gets `ele550` as a response before sending some 
 ### Response: 23 - Watering event
 
 `#elea23#17#0@2023@8@28@11@49`
+
+### Response: 24 - GrowCube Version
+`elea24#11#3.6@4063809#`
+
 
 # GrowCube protocol transcripts
 

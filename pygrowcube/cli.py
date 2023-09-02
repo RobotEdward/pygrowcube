@@ -1,15 +1,13 @@
 """Console script for pygrowcube."""
 import sys
 import click
-from pygrowcube.pygrowcube import GetStatus 
+from pygrowcube.pygrowcube import get_status
+
 
 @click.command()
 def main(args=None):
     """Console script for pygrowcube."""
-    click.echo(GetStatus());
-    click.echo("message")
-    click.echo("Replace this message by putting your code into " "pygrowcube.cli.main")
-    click.echo("See click documentation at https://click.palletsprojects.com/")
+    click.echo(get_status())
     return 0
 
 
