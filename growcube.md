@@ -56,7 +56,6 @@ If you do nothing it repeatedly sends the 30, 21, 21, 21, 21 sequence every 10s.
 `elea21#10#0@82@45@27#`
 
 - Received every 10s
-- #10 = ?? suspect this might be seconds left till next refresh
 - #0 = channel
 - @82@45@27 = Soil moisture - Humidity - Temperature
 
@@ -66,7 +65,6 @@ If you do nothing it repeatedly sends the 30, 21, 21, 21, 21 sequence every 10s.
 
 `elea47#3#0@1#`
 
-- #3 = ?? duration maybe?
 - #0 = channel
 - @1 = requested state 1=>On, 0=>off
 
@@ -75,7 +73,6 @@ If you do nothing it repeatedly sends the 30, 21, 21, 21, 21 sequence every 10s.
 `elea26#1#0#`
 
 - Received directly after issuing a watering-on command
-- #1 = ?? Maybe 0 if a problem?
 - #0 = channel number
 
 ### Response: 27 - Watering-off command accepted
@@ -83,7 +80,6 @@ If you do nothing it repeatedly sends the 30, 21, 21, 21, 21 sequence every 10s.
 `elea27#1#0#`
 
 - Received directly after issuing a watering-off command
-- #1 = ?? Maybe 0 if a problem?
 - #0 = channel number
 
 ## Moisture history
