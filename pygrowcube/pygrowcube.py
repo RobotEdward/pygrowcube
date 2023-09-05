@@ -17,13 +17,15 @@ class Status:
         temperature=0,
         humidity=0,
         moistures=[0, 0, 0, 0],
-        sensors_warnings=[0, 0, 0, 0],
+        sensor_warnings=[0, 0, 0, 0],
+        outlet_locks=[0, 0, 0, 0],
         version="",
     ):
         self.temperature = temperature
         self.humidity = humidity
         self.moistures = moistures
-        self.sensor_warnings = sensors_warnings
+        self.sensor_warnings = sensor_warnings
+        self.outlet_locks = outlet_locks
         self.version = version
         self.refreshed_sensors = [False, False, False, False]
 
@@ -32,12 +34,15 @@ class Status:
         for i in range(4):
             s += f" - Sensor {i}: "
             if self.sensor_warnings[i]:
-                s += f"DISCONNECTED\n"
+                s += f"DISCONNECTED "
             else: 
+                if self.outlet_locks[i]:
+                    s += "OUTLET LOCKED "
                 if not self.refreshed_sensors[i]:
-                    s += "NO READING\n"
+                    s += "NO READING "
                 else:
-                    s += f"{self.moistures[i]}\n"
+                    s += f"{self.moistures[i]}"
+            s += "\n"
         if not self.is_refresh_complete:
             s += f"Warning: GrowCube did not send latest status for all sensors before we stopped waiting\n"
         return s.rstrip()
@@ -53,6 +58,14 @@ class Status:
         if not channel < 4:
             raise ValueError(f"{message.readable_message_type}: Expecting channel number to be less than 4. Message:" + message.get_message())        
         self.sensor_warnings[channel] = True
+
+    def handle_outlet_locked(self, message: Message):
+        if not message.message_content.isdigit():
+            raise ValueError(f"{message.readable_message_type}: Expecting message content to be a channel number. Message:" + message.get_message())
+        channel = int(message.message_content)
+        if not channel < 4:
+            raise ValueError(f"{message.readable_message_type}: Expecting channel number to be less than 4. Message:" + message.get_message())        
+        self.outlet_locks[channel] = True
 
     def handle_sensor_reading(self, message: Message):
         fields = message.get_fields()
@@ -91,12 +104,16 @@ class Status:
         MessageType.START_READINGS: handle_start_reading,
         MessageType.SENSOR_READING: handle_sensor_reading,
         MessageType.SENSOR_DISCONNECTED: handle_sensor_disconnected,
+        MessageType.OUTLET_LOCKED: handle_outlet_locked
     }
 
     def handle_message(self, message: Message):
         logger.debug(f"RECEIVED {message.readable_message_type}: {message.get_message()}")
-        handler = self.status_handlers.get(message.message_type, self.default_handler)
-        handler(self, message)
+        if message.message_type in self.status_handlers:
+            handler = self.status_handlers.get(message.message_type)
+            handler(self, message)
+        else:
+            self.default_handler(message)
 
 
 def get_status(growcube_address:str, timeout_in_seconds:float = STATUS_TIMEOUT) -> Status:
@@ -107,18 +124,28 @@ def get_status(growcube_address:str, timeout_in_seconds:float = STATUS_TIMEOUT) 
     try:
         client.connect()
         request = Message(
-            message_type=44, message_content=Message.format_datetime_for_growcube()
+            message_type=MessageType.REQUEST_HELLO, message_content=Message.format_datetime_for_growcube()
         )
         client.send_message(request)
-        while not status.is_refresh_complete:
-            response = client.receive_message(start,timeout_in_seconds)
-            if isinstance(response,Message):
-                status.handle_message(response)
-            else:
-                logger.warn(f"Response is not a recognisable message: {str(response)}")
-            if (perf_counter() - start) > timeout_in_seconds:
-                logger.warn("Did not get a complete refresh of all sensors within time out")
-                break
-        return status
+        response = client.receive_message(start,timeout_in_seconds)
+        if response.message_type != MessageType.VERSION:
+            logger.error(f"Did not receive version number as expected. Response: {str(response)}")
+        else:
+            status.handle_message(response)
+            request = Message( message_type=MessageType.REQUEST_READINGS, message_content="2" )
+            client.send_message(request)
+            while not status.is_refresh_complete:
+                response = client.receive_message(start,timeout_in_seconds)
+                if isinstance(response,Message):
+                    status.handle_message(response)
+                else:
+                    logger.warn(f"Response is not a recognisable message: {str(response)}")
+                elapsed = perf_counter()-start
+                if elapsed > timeout_in_seconds:
+                    logger.warn("Did not get a complete refresh of all sensors within time out")
+                    break
+                else:
+                    logger.debug(f"Looping. Elapsed:{elapsed}, Timeout: {timeout_in_seconds}")
+            return status
     finally:
         client.close()

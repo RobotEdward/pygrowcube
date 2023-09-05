@@ -5,17 +5,21 @@ import logging
 
 class MessageType(IntEnum):
     # Client command messages:
-    REQUEST_UNKNOWN_1 = (
+    REQUEST_READINGS = (
         43  # TBC: Sent by the client close to start of session elea43#1#2#
     )
     REQUEST_HELLO = 44  # Sent with client datetime at start of session elea44#19#2023@09@05@11@53@30#
+    REQUEST_DELETE = 45 # Delete the settings for a channel - always seems to be sent as a pair with 46 - elea45#1#0# 
+    REQUEST_DELETE_CONFIRM = 46 # Second part of the delete request - don't know why but client alwasy sends this immediately after #45 
     REQUEST_WATER_CONTROL = 47  # Turn water on or off for a channel
     REQUEST_SENSOR_HISTORY = 48  # Request the moisture history for a channel
     REQUEST_CHANNEL_SETTINGS = 49  # Settings for a channel
     # Smart watering: channel@3@min%@max% elea49#9#2@3@10@50#
+    # Smart watering outside of sunlight hours: elea49#9#2@2@10@50#
     # Regular watering: channel@1@how_often@how_long elea49#9#2@1@30s@6#
 
     # GrowCube response messages:
+    OK = 20 # suspect this is OK - always comes back with a #1
     SENSOR_READING = 21  # Moisture reading for an individual sensor
     SENSOR_HISTORY_ENTRY = (
         22  # Moisture readings by hour for a specific channel and date
