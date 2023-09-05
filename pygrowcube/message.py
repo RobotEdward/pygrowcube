@@ -1,13 +1,19 @@
 from datetime import datetime
 from enum import IntEnum
-import logging 
+import logging
 
 
 class MessageType(IntEnum):
     # Client command messages:
-    REQUEST_HELLO = 44  # Sent with client datetime at start of session
+    REQUEST_UNKNOWN_1 = (
+        43  # TBC: Sent by the client close to start of session elea43#1#2#
+    )
+    REQUEST_HELLO = 44  # Sent with client datetime at start of session elea44#19#2023@09@05@11@53@30#
     REQUEST_WATER_CONTROL = 47  # Turn water on or off for a channel
     REQUEST_SENSOR_HISTORY = 48  # Request the moisture history for a channel
+    REQUEST_CHANNEL_SETTINGS = 49  # Settings for a channel
+    # Smart watering: channel@3@min%@max% elea49#9#2@3@10@50#
+    # Regular watering: channel@1@how_often@how_long elea49#9#2@1@30s@6#
 
     # GrowCube response messages:
     SENSOR_READING = 21  # Moisture reading for an individual sensor
@@ -20,13 +26,21 @@ class MessageType(IntEnum):
     VERSION = 24  # Sent on connection
     WATER_ON = 26  # Water turned on for a channel
     WATER_OFF = 27  # Water turned off for a channel
-    SENSOR_DISCONNECTED = 30  # Sent on connection when a sensor is disconnected
+    SENSOR_DISCONNECTED = (
+        30  # Sent on connection when a sensor is disconnected elea30#1#2#
+    )
     START_READINGS = 33  # Always sent before sensor readings with content 0@0
+    OUTLET_LOCKED = 34  # The outlet for the specified channel is locked elea34#1#1#
     UNKNOWN = 0
 
 
 class Message:
-    def __init__(self, message_string=None, message_type:MessageType=MessageType.UNKNOWN, message_content=None):
+    def __init__(
+        self,
+        message_string=None,
+        message_type: MessageType = MessageType.UNKNOWN,
+        message_content=None,
+    ):
         self.message_type = None
         self.content_length = None
         self.message_content = None
@@ -75,7 +89,8 @@ class Message:
 
         if len(sections) != 3:
             raise ValueError(
-                "Invalid message format. It should have exactly 3 sections." + message_string
+                "Invalid message format. It should have exactly 3 sections."
+                + message_string
             )
 
         # Extract and validate message type

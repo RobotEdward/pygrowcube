@@ -6,9 +6,9 @@ Unifi just recognises it as: ESP_3E0241 and manufacturer Espressif inc.
 
 Each message has three sections separated by a # character and ends with a final #. These sections are:
 
-- 1: **Message type** - "eleaXX" where XX is a number indicating the message type
-- 2: **Content length** - Length in bytes of the message content (excluding any # characters)
-- 3: **Message content** - ASCII content specific to the message type. Where the message content has structure fields are delimited by @ characters. Where fields then have further sub-fields these are deliminated by , characters.
+-   1: **Message type** - "eleaXX" where XX is a number indicating the message type
+-   2: **Content length** - Length in bytes of the message content (excluding any # characters)
+-   3: **Message content** - ASCII content specific to the message type. Where the message content has structure fields are delimited by @ characters. Where fields then have further sub-fields these are deliminated by , characters.
 
 For example:
 
@@ -26,10 +26,11 @@ elea22#83#0@2023@8@28@00,00,00,00,00,00,00,00,00,00,00,74,81,84,85,86,86,85,86,8
 
 # But...
 
-The app also sends `ele506` and gets `ele550` as a response before sending some commands.
+The app also sends `ele506` and gets `ele550` as a response before sending "do something" commands.
 
 # Connection
-If you connect, growcube sends a bunch of 0 bytes in between messages. I guess to keep the connection alive. 
+
+If you connect, growcube sends a bunch of 0 bytes in between messages. I guess to keep the connection alive.
 If you do nothing it repeatedly sends the 30, 21, 21, 21, 21 sequence every 10s.
 
 # Commands
@@ -45,19 +46,22 @@ If you do nothing it repeatedly sends the 30, 21, 21, 21, 21 sequence every 10s.
 ### Request - none
 
 ### Response 30 - Sensor disconnected
+
 `elea30#1#2`
- - content = the channel that is not connected
+
+-   content = the channel that is not connected
 
 ### Response 33 - ??
- - Only ever seen 0@0
+
+-   Only ever seen 0@0
 
 ### Response 21 - Sensor current status
 
 `elea21#10#0@82@45@27#`
 
-- Received every 10s
-- #0 = channel
-- @82@45@27 = Soil moisture - Humidity - Temperature
+-   Received every 10s
+-   #0 = channel
+-   @82@45@27 = Soil moisture - Humidity - Temperature
 
 ## Water Control
 
@@ -65,22 +69,22 @@ If you do nothing it repeatedly sends the 30, 21, 21, 21, 21 sequence every 10s.
 
 `elea47#3#0@1#`
 
-- #0 = channel
-- @1 = requested state 1=>On, 0=>off
+-   #0 = channel
+-   @1 = requested state 1=>On, 0=>off
 
 ### Response: 26 - Watering-on command accepted
 
 `elea26#1#0#`
 
-- Received directly after issuing a watering-on command
-- #0 = channel number
+-   Received directly after issuing a watering-on command
+-   #0 = channel number
 
 ### Response: 27 - Watering-off command accepted
 
 `elea27#1#0#`
 
-- Received directly after issuing a watering-off command
-- #0 = channel number
+-   Received directly after issuing a watering-off command
+-   #0 = channel number
 
 ## Moisture history
 
@@ -92,16 +96,16 @@ If you do nothing it repeatedly sends the 30, 21, 21, 21, 21 sequence every 10s.
 
 `elea22#83#0@2023@8@28@00,00,00,00,00,00,00,00,00,00,00,74,81,84,85,86,86,85,86,85,85,84,84,83#`
 
-- Recevied as stream of these responses (one per date) in response
-- This is moisture for each hour in the 24hr period
+-   Recevied as stream of these responses (one per date) in response
+-   This is moisture for each hour in the 24hr period
 
 ### Response: 23 - Watering event
 
 `#elea23#17#0@2023@8@28@11@49`
 
 ### Response: 24 - GrowCube Version
-`elea24#11#3.6@4063809#`
 
+`elea24#11#3.6@4063809#`
 
 # GrowCube protocol transcripts
 
@@ -189,7 +193,8 @@ LOG 2023-08-29T12:28:40: Sending elea47#3#1@1#
 2023-08-29T12:28:56: elea21#10#0@82@45@27#elea21#9#1@0@45@27#
 2023-08-29T12:28:57: elea21#9#2@0@45@27#elea21#9#3@0@45@27#
 2023-08-29T12:29:06: elea21#10#0@82@45@27#
-2023-08-29T12:29:07: elea21#9#1@0@45@27#elea21#9#2@0@45@27#elea21#9#3@0@45@27#
+2023-08-29T12:29:07: elea21#9#1@0@45@27#
+elea21#9#2@0@45@27#elea21#9#3@0@45@27#
 2023-08-29T12:29:07:
 LOG 2023-08-29T12:29:07: Sending elea47#3#1@0#
 elea27#1#1#
