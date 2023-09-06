@@ -31,7 +31,7 @@ from my venv
 # build
 python setup.py sdist bdist_wheel
 # upload
-twine upload --repository testpypi dist/*
+twine upload --repository pypi dist/*
 ```
 
 End result: https://test.pypi.org/project/pygrowcube/0.1.0/
