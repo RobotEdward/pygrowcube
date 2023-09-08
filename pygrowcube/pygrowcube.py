@@ -109,10 +109,14 @@ class Status:
         self.moistures = [0, 0, 0, 0]
 
     def handle_growcube_version(self, message: Message):
-        logger.info(f"C: {message.message_content}")
         version, id = message.message_content.split("@")
         self.version = version
         self.id = id
+
+    def handle_OK(self, message: Message):
+        if message.message_content != "1":
+            logger.warn(f"{message.readable_message_type} received with unexpected content: {message.message_content}")
+        return
 
     def default_handler(self, message: Message):
         logger.warn(
@@ -126,6 +130,7 @@ class Status:
         MessageType.SENSOR_READING: handle_sensor_reading,
         MessageType.SENSOR_DISCONNECTED: handle_sensor_disconnected,
         MessageType.OUTLET_LOCKED: handle_outlet_locked,
+        MessageType.OK: handle_OK,
     }
 
     def handle_message(self, message: Message):
@@ -140,9 +145,9 @@ class Status:
 
 
 def get_status(
-    growcube_address: str, timeout_in_seconds: float = STATUS_TIMEOUT
+    growcube_address: str, timeout_in_seconds: float = STATUS_TIMEOUT, wait_for_sensor_readings: bool = True
 ) -> Status:
-    logger.info(f"Getting status of GrowCube at {growcube_address}:{PORT}")
+    logger.info(f"Getting status of GrowCube at {growcube_address}:{PORT}. Timeout {timeout_in_seconds}. Wait for readings: {wait_for_sensor_readings}.")
     client = MessageClient(growcube_address, PORT)
     status = Status()
     start = perf_counter()
@@ -160,28 +165,29 @@ def get_status(
             )
         else:
             status.handle_message(response)
-            request = Message(
-                message_type=MessageType.REQUEST_READINGS, message_content="2"
-            )
-            client.send_message(request)
-            while not status.is_refresh_complete:
-                response = client.receive_message(start, timeout_in_seconds)
-                if isinstance(response, Message):
-                    status.handle_message(response)
-                else:
-                    logger.warn(
-                        f"Response is not a recognisable message: {str(response)}"
-                    )
-                elapsed = perf_counter() - start
-                if elapsed > timeout_in_seconds:
-                    logger.warn(
-                        "Did not get a complete refresh of all sensors within time out"
-                    )
-                    break
-                else:
-                    logger.debug(
-                        f"Looping. Elapsed:{elapsed}, Timeout: {timeout_in_seconds}"
-                    )
+            if wait_for_sensor_readings:
+                request = Message(
+                    message_type=MessageType.REQUEST_READINGS, message_content="2"
+                )
+                client.send_message(request)
+                while not status.is_refresh_complete:
+                    response = client.receive_message(start, timeout_in_seconds)
+                    if isinstance(response, Message):
+                        status.handle_message(response)
+                    else:
+                        logger.warn(
+                            f"Response is not a recognisable message: {str(response)}"
+                        )
+                    elapsed = perf_counter() - start
+                    if elapsed > timeout_in_seconds:
+                        logger.warn(
+                            "Did not get a complete refresh of all sensors within time out"
+                        )
+                        break
+                    else:
+                        logger.debug(
+                            f"Looping. Elapsed:{elapsed}, Timeout: {timeout_in_seconds}"
+                        )
             return status
     finally:
         client.close()
