@@ -23,6 +23,7 @@ class Status:
         outlet_locks=[0, 0, 0, 0],
         version="",
         id="",
+        host=""
     ):
         self.temperature = temperature
         self.humidity = humidity
@@ -32,9 +33,10 @@ class Status:
         self.version = version
         self.refreshed_sensors = [False, False, False, False]
         self.id = id
+        self.host = host
 
     def __str__(self) -> str:
-        s = f"GrowCube {self.id}. Software version: {self.version}\nTemperature: {self.temperature}, Humidity: {self.humidity}\n"
+        s = f"GrowCube {self.id} ({self.host}). Software version: {self.version}\nTemperature: {self.temperature}, Humidity: {self.humidity}\n"
         for i in range(4):
             s += f" - Sensor {i}: "
             if self.sensor_warnings[i]:
@@ -149,7 +151,7 @@ def get_status(
 ) -> Status:
     logger.info(f"Getting status of GrowCube at {growcube_address}:{PORT}. Timeout {timeout_in_seconds}. Wait for readings: {wait_for_sensor_readings}.")
     client = MessageClient(growcube_address, PORT)
-    status = Status()
+    status = Status(host=growcube_address)
     start = perf_counter()
     try:
         client.connect()
