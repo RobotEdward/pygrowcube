@@ -2,7 +2,7 @@
 from .message import Message
 from .message import MessageType
 from .messageclient import MessageClient
-from time import perf_counter
+from .timeouthelper import TimeoutHelper
 import logging
 
 PORT = 8800
@@ -23,7 +23,8 @@ class Status:
         outlet_locks=[0, 0, 0, 0],
         version="",
         id="",
-        host=""
+        host="",
+        connect_only=False
     ):
         self.temperature = temperature
         self.humidity = humidity
@@ -34,23 +35,26 @@ class Status:
         self.refreshed_sensors = [False, False, False, False]
         self.id = id
         self.host = host
+        self.connect_only = connect_only
 
     def __str__(self) -> str:
-        s = f"GrowCube {self.id} ({self.host}). Software version: {self.version}\nTemperature: {self.temperature}, Humidity: {self.humidity}\n"
-        for i in range(4):
-            s += f" - Sensor {i}: "
-            if self.sensor_warnings[i]:
-                s += f"DISCONNECTED "
-            else:
-                if self.outlet_locks[i]:
-                    s += "OUTLET LOCKED "
-                if not self.refreshed_sensors[i]:
-                    s += "NO READING "
+        s = f"GrowCube {self.id} ({self.host}). Software version: {self.version}\n"
+        if not self.connect_only:
+            s += f"Temperature: {self.temperature}, Humidity: {self.humidity}\n"
+            for i in range(4):
+                s += f" - Sensor {i}: "
+                if self.sensor_warnings[i]:
+                    s += f"DISCONNECTED "
                 else:
-                    s += f"{self.moistures[i]}"
-            s += "\n"
-        if not self.is_refresh_complete:
-            s += f"Warning: GrowCube did not send latest status for all sensors before we stopped waiting\n"
+                    if self.outlet_locks[i]:
+                        s += "OUTLET LOCKED "
+                    if not self.refreshed_sensors[i]:
+                        s += "NO READING "
+                    else:
+                        s += f"{self.moistures[i]}"
+                s += "\n"
+            if not self.is_refresh_complete:
+                s += f"Warning: GrowCube did not send latest status for all sensors before we stopped waiting\n"
         return s.rstrip()
 
     @property
@@ -117,7 +121,9 @@ class Status:
 
     def handle_OK(self, message: Message):
         if message.message_content != "1":
-            logger.warn(f"{message.readable_message_type} received with unexpected content: {message.message_content}")
+            logger.warn(
+                f"{message.readable_message_type} received with unexpected content: {message.message_content}"
+            )
         return
 
     def default_handler(self, message: Message):
@@ -146,21 +152,25 @@ class Status:
             self.default_handler(message)
 
 
-def get_status(
-    growcube_address: str, timeout_in_seconds: float = STATUS_TIMEOUT, wait_for_sensor_readings: bool = True
+async def get_status(
+    growcube_address: str,
+    timeout_in_seconds: float = STATUS_TIMEOUT,
+    wait_for_sensor_readings: bool = True,
 ) -> Status:
-    logger.info(f"Getting status of GrowCube at {growcube_address}:{PORT}. Timeout {timeout_in_seconds}. Wait for readings: {wait_for_sensor_readings}.")
+    logger.info(
+        f"Getting status of GrowCube at {growcube_address}:{PORT}. Timeout {timeout_in_seconds}. Wait for readings: {wait_for_sensor_readings}."
+    )
     client = MessageClient(growcube_address, PORT)
-    status = Status(host=growcube_address)
-    start = perf_counter()
+    status = Status(host=growcube_address, connect_only=not wait_for_sensor_readings)
+    timeout = TimeoutHelper(timeout_in_seconds)
     try:
-        client.connect()
+        await client.connect()
         request = Message(
             message_type=MessageType.REQUEST_HELLO,
             message_content=Message.format_datetime_for_growcube(),
         )
-        client.send_message(request)
-        response = client.receive_message(start, timeout_in_seconds)
+        await client.send_message(request, timeout)
+        response = await client.receive_message(timeout)
         if response.message_type != MessageType.VERSION:
             logger.error(
                 f"Did not receive version number as expected. Response: {str(response)}"
@@ -171,25 +181,24 @@ def get_status(
                 request = Message(
                     message_type=MessageType.REQUEST_READINGS, message_content="2"
                 )
-                client.send_message(request)
+                await client.send_message(request, timeout)
                 while not status.is_refresh_complete:
-                    response = client.receive_message(start, timeout_in_seconds)
+                    response = await client.receive_message(timeout)
                     if isinstance(response, Message):
                         status.handle_message(response)
                     else:
                         logger.warn(
                             f"Response is not a recognisable message: {str(response)}"
                         )
-                    elapsed = perf_counter() - start
-                    if elapsed > timeout_in_seconds:
+                    if timeout.timed_out:
                         logger.warn(
                             "Did not get a complete refresh of all sensors within time out"
                         )
                         break
                     else:
                         logger.debug(
-                            f"Looping. Elapsed:{elapsed}, Timeout: {timeout_in_seconds}"
+                            f"Looping. Elapsed:{timeout.elapsed}, Timeout: {timeout_in_seconds}"
                         )
             return status
     finally:
-        client.close()
+        await client.close()

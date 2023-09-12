@@ -4,6 +4,10 @@ import logging
 
 
 class MessageType(IntEnum):
+    # Messages without conten:
+    REQUEST_READY_FOR_COMMAND = 506,
+    READY_FOR_COMMAND = 550
+
     # Client command messages:
     REQUEST_READINGS = (
         43  # TBC: Sent by the client close to start of session elea43#1#2#
@@ -55,6 +59,10 @@ class Message:
             self.message_type = message_type
             self.message_content = message_content
             self.content_length = len(message_content)
+        elif message_type is not None:
+            self.message_type = message_type
+            self.message_content = ""
+            self.content_length = 0
 
     @property
     def readable_message_type(self) -> str:
@@ -62,6 +70,10 @@ class Message:
             return f"{self.message_type} {MessageType(self.message_type).name}"
         else:
             return f"{self.message_type} UNKNOWN"
+
+    @property
+    def content_expected_for_message_type(self) -> bool:
+        return self.message_type < 500
 
     def parse_growcube_datetime(datetime_str):
         """
@@ -125,29 +137,13 @@ class Message:
         return fields
 
     def get_message(self):
-        if (
-            self.message_type is None
-            or self.content_length is None
-            or self.message_content is None
-        ):
-            raise ValueError("Message is not fully initialized.")
+        if self.message_type is None:
+            raise ValueError("message_type not specified")
 
-        # Create the resulting message string
-        return f"{self.message_type}#{self.content_length}#{self.message_content}#"
+        if self.message_type < 500:
+            return f"elea{self.message_type}#{self.content_length}#{self.message_content}#"
+        else:
+            return f"ele{self.message_type}"
 
     def __str__(self):
         return f"Message Type: {self.message_type}, Content Length: {self.content_length}, Content: {self.message_content}"
-
-
-# # Example usage with alternative constructor:
-# message = Message(message_type="elea01", message_content="John@Doe")
-
-# print(message.message_type)  # Output: elea01
-# print(message.content_length)  # Output: 8
-# print(message.message_content)  # Output: John@Doe
-
-# fields = message.get_fields()
-# print(fields)  # Output: ['John', 'Doe']
-
-# resulting_message = message.get_message()
-# print(resulting_message)  # Output: elea01#8#John@Doe#
