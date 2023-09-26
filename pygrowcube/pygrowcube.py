@@ -24,7 +24,8 @@ class Status:
         version="",
         id="",
         host="",
-        connect_only=False
+        has_water=True,
+        connect_only=False,
     ):
         self.temperature = temperature
         self.humidity = humidity
@@ -36,11 +37,14 @@ class Status:
         self.id = id
         self.host = host
         self.connect_only = connect_only
+        self.has_water = has_water
 
     def __str__(self) -> str:
         s = f"GrowCube {self.id} ({self.host}). Software version: {self.version}\n"
         if not self.connect_only:
             s += f"Temperature: {self.temperature}, Humidity: {self.humidity}\n"
+            if not self.has_water:
+                s += "Warning: Not enough water. Refill and press the unlock button on GrowCube device.\n"
             for i in range(4):
                 s += f" - Sensor {i}: "
                 if self.sensor_warnings[i]:
@@ -107,12 +111,16 @@ class Status:
         logger.debug(f"Received reading for sensor {channel}: {reading}.")
 
     def handle_start_reading(self, message: Message):
-        assert message.message_content == "0@0", (
-            "Received message content other than 0@0 for start readings message: "
-            + message.message_content
-        )
         self.refreshed_sensors = [False, False, False, False]
         self.moistures = [0, 0, 0, 0]
+        if not (
+            (message.message_content == "0@0") or (message.message_content == "1@1")
+        ):
+            raise ValueError(
+                f"{message.readable_message_type}: Received content other than 0@0 or 1@1. Message: {message.get_message()}"
+            )
+        if message.message_content == "1@1":
+            self.has_water = False
 
     def handle_growcube_version(self, message: Message):
         version, id = message.message_content.split("@")

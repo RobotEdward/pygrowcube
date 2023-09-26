@@ -11,3 +11,8 @@ History
 ------------------
 
 * Switched to asyncio for networking
+
+0.2.1 (2023-09-26)
+------------------
+
+* Handle low water error

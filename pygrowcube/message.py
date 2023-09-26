@@ -5,7 +5,7 @@ import logging
 
 class MessageType(IntEnum):
     # Messages without conten:
-    REQUEST_READY_FOR_COMMAND = 506,
+    REQUEST_READY_FOR_COMMAND = (506,)
     READY_FOR_COMMAND = 550
 
     # Client command messages:
@@ -13,8 +13,8 @@ class MessageType(IntEnum):
         43  # TBC: Sent by the client close to start of session elea43#1#2#
     )
     REQUEST_HELLO = 44  # Sent with client datetime at start of session elea44#19#2023@09@05@11@53@30#
-    REQUEST_DELETE = 45 # Delete the settings for a channel - always seems to be sent as a pair with 46 - elea45#1#0# 
-    REQUEST_DELETE_CONFIRM = 46 # Second part of the delete request - don't know why but client alwasy sends this immediately after #45 
+    REQUEST_DELETE = 45  # Delete the settings for a channel - always seems to be sent as a pair with 46 - elea45#1#0#
+    REQUEST_DELETE_CONFIRM = 46  # Second part of the delete request - don't know why but client alwasy sends this immediately after #45
     REQUEST_WATER_CONTROL = 47  # Turn water on or off for a channel
     REQUEST_SENSOR_HISTORY = 48  # Request the moisture history for a channel
     REQUEST_CHANNEL_SETTINGS = 49  # Settings for a channel
@@ -23,7 +23,7 @@ class MessageType(IntEnum):
     # Regular watering: channel@1@how_often@how_long elea49#9#2@1@30s@6#
 
     # GrowCube response messages:
-    OK = 20 # suspect this is OK - always comes back with a #1
+    OK = 20  # suspect this is OK - always comes back with a #1
     SENSOR_READING = 21  # Moisture reading for an individual sensor
     SENSOR_HISTORY_ENTRY = (
         22  # Moisture readings by hour for a specific channel and date
@@ -37,7 +37,9 @@ class MessageType(IntEnum):
     SENSOR_DISCONNECTED = (
         30  # Sent on connection when a sensor is disconnected elea30#1#2#
     )
-    START_READINGS = 33  # Always sent before sensor readings with content 0@0
+    START_READINGS = 33  # Always sent before sensor readings with content:
+    # 0@0 if normal.
+    # 1@0 if device is locked due to low water
     OUTLET_LOCKED = 34  # The outlet for the specified channel is locked elea34#1#1#
     UNKNOWN = 0
 
@@ -141,7 +143,9 @@ class Message:
             raise ValueError("message_type not specified")
 
         if self.message_type < 500:
-            return f"elea{self.message_type}#{self.content_length}#{self.message_content}#"
+            return (
+                f"elea{self.message_type}#{self.content_length}#{self.message_content}#"
+            )
         else:
             return f"ele{self.message_type}"
 
