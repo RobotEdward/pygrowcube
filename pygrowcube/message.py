@@ -17,7 +17,7 @@ class MessageType(IntEnum):
     REQUEST_DELETE_CONFIRM = 46  # Second part of the delete request - don't know why but client alwasy sends this immediately after #45
     REQUEST_WATER_CONTROL = 47  # Turn water on or off for a channel
     REQUEST_SENSOR_HISTORY = 48  # Request the moisture history for a channel
-    REQUEST_CHANNEL_SETTINGS = 49  # Settings for a channel
+    REQUEST_CHANNEL_SETTINGS = 49  # Set channel settings
     # Smart watering: channel@3@min%@max% elea49#9#2@3@10@50#
     # Smart watering outside of sunlight hours: elea49#9#2@2@10@50#
     # Regular watering: channel@1@how_often@how_long elea49#9#2@1@30s@6#

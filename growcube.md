@@ -53,8 +53,8 @@ If you do nothing it repeatedly sends the 30, 21, 21, 21, 21 sequence every 10s.
 
 ### Response 33 - ??
 
--   Only ever seen 0@0
--   Received 1@1 and got "low water device is locked" error in app (well then app crashes on iOS). (also sensor C is abnormal)
+-   0@0 - normal
+-   1@1 - got "low water device is locked" error in app (well then app crashes on iOS). (also sensor C is abnormal) (second time sensor B is abnormal)
 
 ### Response 21 - Sensor current status
 

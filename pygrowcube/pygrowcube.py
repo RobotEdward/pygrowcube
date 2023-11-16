@@ -164,6 +164,7 @@ async def get_status(
     growcube_address: str,
     timeout_in_seconds: float = STATUS_TIMEOUT,
     wait_for_sensor_readings: bool = True,
+    get_history: bool = False,
 ) -> Status:
     logger.info(
         f"Getting status of GrowCube at {growcube_address}:{PORT}. Timeout {timeout_in_seconds}. Wait for readings: {wait_for_sensor_readings}."
